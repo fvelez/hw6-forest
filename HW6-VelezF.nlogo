@@ -13,6 +13,7 @@ trees-own [
   life-expectancy
   max-tree-size
   max-diameter
+  diameter
   growth-rate
   is-harvested?
   fire-resistance
@@ -28,11 +29,12 @@ to setup
     set shape "tree"
     set species "A"
     setxy random-xcor random-ycor
-    set color green
+    set color green + (random-float 2)
     set life-expectancy 300
     set max-tree-size 6
     set growth-rate (max-tree-size / life-expectancy)
     set age random 300
+    set diameter growth-rate * life-expectancy
     set size growth-rate * age
 
   ]
@@ -41,11 +43,12 @@ to setup
     set shape "tree"
     set species "B"
     setxy random-xcor random-ycor
-    set color red
+    set color red + (random-float 2)
     set life-expectancy 200
     set max-tree-size 4
     set growth-rate (max-tree-size / life-expectancy)
     set age random 200
+    set diameter growth-rate * life-expectancy
     set size growth-rate * age
   ]
 end
@@ -54,9 +57,27 @@ end
 to grow
   tick
   ask trees with [species = "A"][
-    set size growth-rate
+    set diameter diameter + growth-rate
+    if size < max-tree-size [
+      set size diameter + growth-rate
+    ]
+    set plabel size
+    set plabel-color white
+    set age age + 1
+    if age > life-expectancy[ die ]
+    ;if age > 25
   ]
-  wait 0.01
+  ask trees with [species = "B"][
+    set diameter diameter + growth-rate
+    if size < max-tree-size [
+      set size diameter + growth-rate
+    ]
+    set plabel size
+    set plabel-color white
+    set age age + 1
+    if age > life-expectancy[ die ]
+  ]
+  wait 0.05
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -109,6 +130,23 @@ BUTTON
 NIL
 setup
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+19
+139
+83
+172
+grow!
+grow
+T
 1
 T
 OBSERVER
@@ -460,7 +498,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
