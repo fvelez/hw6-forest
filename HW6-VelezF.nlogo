@@ -59,6 +59,7 @@ to setup
 end
 
 
+; Is called every tick to update each tree's chances of dying as they age
 to delta-mortality
   set mature-tree-mortality 0.6 ^ (life-expectancy - age)
   set immature-tree-mortality 0.3 ^ age
@@ -67,37 +68,49 @@ end
 
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
+
+  ; Ask each tree to call a function to update itself.
   ask trees with [species = "A"][
-    set diameter diameter + growth-rate
-    if size < max-tree-size [
-      set size size + growth-rate
-    ]
-    set label age  ; remove later
-    set label-color white
-    set age age + 1
-    if age > life-expectancy[ set label "" die ]
-    delta-mortality
-    ;show mature-tree-mortality
-    let probability random-float 1 ;
-    ifelse age > 25[
-      if probability < mature-tree-mortality [ die ]
-    ][
-       if probability < immature-tree-mortality [ die ]
-    ]
+    update-trees
   ]
 
   ask trees with [species = "B"][
-    set diameter diameter + growth-rate
-    if size < max-tree-size [
-      set size diameter + growth-rate
-    ]
-    set label age ; remove later
-    set label-color white
-    set age age + 1
-    if age > life-expectancy[ set plabel "" die ]
-    delta-mortality
+    update-trees
   ]
+
+  ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
+end
+
+
+; Updates a tree's diameter, size (if possible), mortality rate, and age
+to update-trees
+  set diameter diameter + growth-rate
+  if size < max-tree-size [
+    set size size + growth-rate
+  ]
+  set label age  ; remove later
+  set label-color white
+
+  ; Increase age by one year.
+  set age age + 1
+
+  ; If tree reaches its life-expectancy, it should die of old age
+  if age > life-expectancy[ set label "" die ]
+
+  ; Update mortality rate before comparison
+  delta-mortality
+
+  ; Randomly chooses a number to compare with mortality rates
+  let probability random-float 1 ;
+
+  ; Use the different mortality rates depending on if the tree has matured or not.
+  ifelse age > 25[
+    if probability < mature-tree-mortality [ die ]
+  ][
+    if probability < immature-tree-mortality [ die ]
+  ]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -144,9 +157,9 @@ HORIZONTAL
 
 BUTTON
 15
-73
+74
 78
-106
+107
 NIL
 setup
 NIL
@@ -529,7 +542,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
