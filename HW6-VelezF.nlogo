@@ -35,11 +35,11 @@ to setup
     set life-expectancy 150
     set max-tree-size 1.2
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 300
+    set age random life-expectancy
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
-    set mature-tree-mortality 0.6 ^ (life-expectancy - age)
-    set immature-tree-mortality 0.3 ^ age
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
   ; Create species B
   create-trees (n / 2) [
@@ -50,12 +50,18 @@ to setup
     set life-expectancy 100
     set max-tree-size 1
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 200
+    set age random life-expectancy
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
-    set mature-tree-mortality 0.6 ^ (life-expectancy - age)
-    set immature-tree-mortality 0.3 ^ age
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
+end
+
+
+to delta-mortality
+  set mature-tree-mortality 0.6 ^ (life-expectancy - age)
+  set immature-tree-mortality 0.3 ^ age
 end
 
 
@@ -66,11 +72,18 @@ to grow
     if size < max-tree-size [
       set size size + growth-rate
     ]
-    set plabel precision size 3
-    set plabel-color white
+    set label age  ; remove later
+    set label-color white
     set age age + 1
-    if age > life-expectancy[ set plabel "" die ]
-    ;if age > 25
+    if age > life-expectancy[ set label "" die ]
+    delta-mortality
+    ;show mature-tree-mortality
+    let probability random-float 1 ;
+    ifelse age > 25[
+      if probability < mature-tree-mortality [ die ]
+    ][
+       if probability < immature-tree-mortality [ die ]
+    ]
   ]
 
   ask trees with [species = "B"][
@@ -78,12 +91,13 @@ to grow
     if size < max-tree-size [
       set size diameter + growth-rate
     ]
-    set plabel size
-    set plabel-color white
+    set label age ; remove later
+    set label-color white
     set age age + 1
     if age > life-expectancy[ set plabel "" die ]
+    delta-mortality
   ]
-  wait 0.05
+  wait 0.1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -122,7 +136,7 @@ n
 n
 0
 100
-98.0
+100.0
 2
 1
 NIL
