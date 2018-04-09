@@ -18,6 +18,8 @@ trees-own [
   is-harvested?
   fire-resistance
   age
+  mature-tree-mortality
+  immature-tree-mortality
 ]
 
 to setup
@@ -30,13 +32,14 @@ to setup
     set species "A"
     setxy random-xcor random-ycor
     set color green + (random-float 2)
-    set life-expectancy 300
-    set max-tree-size 6
+    set life-expectancy 150
+    set max-tree-size 1.2
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 300
+    set age random life-expectancy
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
-
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
   ; Create species B
   create-trees (n / 2) [
@@ -44,50 +47,67 @@ to setup
     set species "B"
     setxy random-xcor random-ycor
     set color red + (random-float 2)
-    set life-expectancy 200
-    set max-tree-size 4
+    set life-expectancy 100
+    set max-tree-size 1
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 200
+    set age random life-expectancy
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
 end
 
 
+to delta-mortality
+  set mature-tree-mortality 0.6 ^ (life-expectancy - age)
+  set immature-tree-mortality 0.3 ^ age
+end
+
+
 to grow
-  tick
+  tick ;every time this function is run, 1 year has passed in this simulation
   ask trees with [species = "A"][
     set diameter diameter + growth-rate
     if size < max-tree-size [
-      set size diameter + growth-rate
+      set size size + growth-rate
     ]
-    set plabel size
-    set plabel-color white
+    set label age  ; remove later
+    set label-color white
     set age age + 1
-    if age > life-expectancy[ die ]
-    ;if age > 25
+    if age > life-expectancy[ set label "" die ]
+    delta-mortality
+    ;show mature-tree-mortality
+    let probability random-float 1 ;
+    ifelse age > 25[
+      if probability < mature-tree-mortality [ die ]
+    ][
+       if probability < immature-tree-mortality [ die ]
+    ]
   ]
+
   ask trees with [species = "B"][
     set diameter diameter + growth-rate
     if size < max-tree-size [
       set size diameter + growth-rate
     ]
-    set plabel size
-    set plabel-color white
+    set label age ; remove later
+    set label-color white
     set age age + 1
-    if age > life-expectancy[ die ]
+    if age > life-expectancy[ set plabel "" die ]
+    delta-mortality
   ]
-  wait 0.05
+  wait 0.1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+878
+679
 -1
 -1
-13.0
+20.0
 1
 10
 1
@@ -115,8 +135,8 @@ SLIDER
 n
 n
 0
-20
-20.0
+100
+100.0
 2
 1
 NIL
@@ -144,7 +164,7 @@ BUTTON
 139
 83
 172
-grow!
+run
 grow
 T
 1
@@ -155,6 +175,17 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+16
+217
+130
+266
+tree A:B ratio
+(count trees with [species = \"A\"]) / (count trees with [species = \"B\"])
+3
+1
+12
 
 @#$#@#$#@
 ## WHAT IS IT?
