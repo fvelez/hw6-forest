@@ -20,11 +20,7 @@ trees-own [
   age
   mature-tree-mortality
   immature-tree-mortality
-  fire-constant ; probability of a tree dying by fire, 0.6 for species A, 0.95 for species B (determined in setup)
-  fire-resistance
 ]
-
-patches-own [ on-fire? ]
 
 to setup
   ca
@@ -34,7 +30,6 @@ to setup
   create-trees (n / 2) [
     set shape "tree"
     set species "A"
-    set fire-constant 0.6
     setxy random-xcor random-ycor
     set color green + (random-float 2)
     set life-expectancy 150
@@ -45,13 +40,11 @@ to setup
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
-    set fire-resistance fire-constant ^ age
   ]
   ; Create species B
   create-trees (n / 2) [
     set shape "tree"
     set species "B"
-    set fire-constant 0.95
     setxy random-xcor random-ycor
     set color red + (random-float 2)
     set life-expectancy 100
@@ -62,7 +55,6 @@ to setup
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
-    set fire-resistance fire-constant ^ age
   ]
 end
 
@@ -77,10 +69,11 @@ end
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
 
+
   ; Any patches on fire slowly get darker as they burn out over 25 years.
-  ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2) ]
+  ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2)]
   ; When a patch has been on fire for 25 years, change back to green.
-  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4 set on-fire? false]
+  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
 
   ; Ask each tree to call a function to update itself.
   ask trees with [species = "A"][
@@ -99,7 +92,6 @@ to grow
    fire
   ]
 
-  burn ; calls function to decide whether a tree near a fire burns to ashes or not
 
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
@@ -108,10 +100,6 @@ end
 
 ; Updates a tree's diameter, size (if possible), mortality rate, and age
 to update-trees
-
-  ; updates the tree's fire resistance according to age
-  set fire-resistance fire-constant ^ age
-
   set diameter diameter + growth-rate
   if size < max-tree-size [
     set size size + growth-rate
@@ -148,27 +136,9 @@ end
 to fire
   ask one-of patches with [pcolor = green - 4] [
     set pcolor red
-    set on-fire? true
   ]
   ; check trees w/in radius 5, probably
 end
-
-to burn
-  ask trees[
-    if any? patches in-radius 5 with [on-fire? = true] [
-      let probability (random-float 1)
-      if probability > fire-resistance [ show "death by fire!!" die ]
-    ]
-  ]
-end
-
-
-
-
-
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -205,8 +175,8 @@ SLIDER
 n
 n
 0
-300
-300.0
+100
+100.0
 2
 1
 NIL
@@ -257,6 +227,7 @@ tree A:B ratio
 1
 12
 
+
 SLIDER
 18
 288
@@ -266,12 +237,12 @@ fire-probability
 fire-probability
 0
 1
-
-0.16
+0.34
 0.01
 1
 NIL
 HORIZONTAL
+
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -615,7 +586,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
