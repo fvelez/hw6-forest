@@ -69,6 +69,7 @@ end
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
 
+
   ; Any patches on fire slowly get darker as they burn out over 25 years.
   ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2)]
   ; When a patch has been on fire for 25 years, change back to green.
@@ -103,6 +104,7 @@ to update-trees
   if size < max-tree-size [
     set size size + growth-rate
   ]
+
   set label age  ; remove later
   set label-color white
 
@@ -124,6 +126,7 @@ to update-trees
   ][
     if probability < immature-tree-mortality [ die ]
   ]
+
 
 end
 
@@ -224,6 +227,7 @@ tree A:B ratio
 1
 12
 
+
 SLIDER
 18
 288
@@ -238,6 +242,7 @@ fire-probability
 1
 NIL
 HORIZONTAL
+
 
 @#$#@#$#@
 ## WHAT IS IT?
