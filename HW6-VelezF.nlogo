@@ -15,12 +15,12 @@ trees-own [
   diameter
   growth-rate
   is-harvested?
-  fire-resistance
   age
   mature-tree-mortality
   immature-tree-mortality
   fire-constant ; probability of a tree dying by fire, 0.6 for species A, 0.95 for species B (determined in setup)
   fire-resistance
+  is-mature?
 ]
 
 patches-own [ on-fire? ]
@@ -40,6 +40,7 @@ to setup
     set max-tree-size 1.2
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
+    ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
@@ -57,6 +58,7 @@ to setup
     set max-tree-size 1
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
+    ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
     set diameter growth-rate * life-expectancy
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
@@ -79,8 +81,10 @@ to grow
 
   ; Any patches on fire slowly get darker as they burn out over 25 years.
   ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2) ]
+
   ; When a patch has been on fire for 25 years, change back to green.
-  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4 set on-fire? false]
+  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
+  ask patches with [ pcolor < 15 ] [ set on-fire? false ]
 
   ; Ask each tree to call a function to update itself.
   ask trees with [species = "A"][
@@ -102,12 +106,13 @@ to grow
 
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
+  harvest
 end
 
 
 ; Updates a tree's diameter, size (if possible), mortality rate, and age
 to update-trees
-
+  if age > 25 [ set is-mature? true ]
   ; updates the tree's fire resistance according to age
   set fire-resistance fire-constant ^ age
 
@@ -132,13 +137,37 @@ to update-trees
   let probability random-float 1 ;
 
   ; Use the different mortality rates depending on if the tree has matured or not.
-  ifelse age > 25[
+  ifelse is-mature?[
     if probability < mature-tree-mortality [ die ]
   ][
     if probability < immature-tree-mortality [ die ]
   ]
+  reproduce
+end
 
 
+to harvest
+  let hardwood-tree-count count trees with [species = "B" and is-mature? = true]
+  let harvest-percent round (hardwood-tree-count * harvest-rate)
+  show harvest-percent
+  repeat harvest-percent[
+    ask one-of trees with [species = "B" and is-mature? = true] [ die ]
+  ]
+end
+
+
+to reproduce
+  let probability random-float 1
+  if (probability < reproduction-probability) and (is-mature? = true)[
+    hatch 1[
+      let random-x (xcor + 3) - (random-float 6)
+      let random-y (ycor + 3) - (random-float 6)
+      setxy random-x random-y
+      set age 1
+      set is-mature? false
+    ]
+
+  ]
 end
 
 
@@ -149,15 +178,21 @@ to fire
     set pcolor red
     set on-fire? true
   ]
-  ; check trees w/in radius 5, probably
+  ;color all burning patches red for visualization
+  ask patches with [on-fire? = true] [
+    ask patches in-radius 5 [
+      set pcolor red
+      set on-fire? true
+    ]
+  ]
 end
 
 
 to burn
   ask trees[
-    if any? patches in-radius 5 with [on-fire? = true] [
+    if [on-fire?] of patch-here = true [
       let probability (random-float 1)
-      if probability > fire-resistance [ show "death by fire!!" die ]
+      if probability > fire-resistance [ die ]
     ]
   ]
 end
@@ -166,25 +201,23 @@ end
 
 
 
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+292
 10
-878
-679
+894
+613
 -1
 -1
-20.0
+18.0
 1
 10
 1
 1
 1
 0
-0
-0
+1
+1
 1
 -16
 16
@@ -197,10 +230,10 @@ ticks
 30.0
 
 SLIDER
-14
-30
-186
-63
+9
+24
+181
+57
 n
 n
 0
@@ -212,10 +245,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-15
-74
-78
-107
+10
+68
+73
+101
 NIL
 setup
 NIL
@@ -229,10 +262,10 @@ NIL
 1
 
 BUTTON
-19
+10
+106
+74
 139
-83
-172
 run
 grow
 T
@@ -246,10 +279,10 @@ NIL
 1
 
 MONITOR
-16
-217
-130
-266
+9
+144
+123
+193
 tree A:B ratio
 (count trees with [species = \"A\"]) / (count trees with [species = \"B\"])
 3
@@ -257,19 +290,79 @@ tree A:B ratio
 12
 
 SLIDER
-18
-288
-190
-321
+10
+198
+182
+231
 fire-probability
 fire-probability
 0
 1
-0.16
+0.39
 0.01
 1
 NIL
 HORIZONTAL
+
+SLIDER
+11
+237
+183
+270
+harvest-rate
+harvest-rate
+0
+1
+0.13
+0.01
+1
+NIL
+HORIZONTAL
+
+SWITCH
+10
+323
+146
+356
+overcrowding?
+overcrowding?
+1
+1
+-1000
+
+SLIDER
+10
+280
+197
+313
+reproduction-probability
+reproduction-probability
+0
+1
+0.46
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+9
+364
+274
+581
+Tree population of Species A/ B per year
+years
+tree count
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Species A" 1.0 0 -8330359 true "" "plot count trees with [species = \"A\"]"
+"Species B" 1.0 0 -2139308 true "" "plot count trees with [species = \"B\"]"
 
 @#$#@#$#@
 ## WHAT IS IT?
