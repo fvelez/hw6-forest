@@ -1,7 +1,6 @@
 ; Felix Velez & Kevin Hernandez
 ; HW6
 
-
 globals [
 
 ]
@@ -153,6 +152,7 @@ to fire
   ; check trees w/in radius 5, probably
 end
 
+
 to burn
   ask trees[
     if any? patches in-radius 5 with [on-fire? = true] [
@@ -161,7 +161,6 @@ to burn
     ]
   ]
 end
-
 
 
 
