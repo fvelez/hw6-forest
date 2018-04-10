@@ -69,6 +69,12 @@ end
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
 
+
+  ; Any patches on fire slowly get darker as they burn out over 25 years.
+  ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2)]
+  ; When a patch has been on fire for 25 years, change back to green.
+  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
+
   ; Ask each tree to call a function to update itself.
   ask trees with [species = "A"][
     update-trees
@@ -77,6 +83,15 @@ to grow
   ask trees with [species = "B"][
     update-trees
   ]
+
+  ; Randomly chooses a number to compare with the chances of a forest fire.
+  let fire-random random-float 1
+
+  ; Calls the 'fire' function if the random number by chance means there is a fire
+  if fire-random < fire-probability [
+   fire
+  ]
+
 
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
@@ -89,6 +104,7 @@ to update-trees
   if size < max-tree-size [
     set size size + growth-rate
   ]
+
   set label age  ; remove later
   set label-color white
 
@@ -111,6 +127,17 @@ to update-trees
     if probability < immature-tree-mortality [ die ]
   ]
 
+
+end
+
+
+; Chooses a random patch to set on fire.
+; Will soon add code to affect trees within a radius. Or will that be in the 'grow' function
+to fire
+  ask one-of patches with [pcolor = green - 4] [
+    set pcolor red
+  ]
+  ; check trees w/in radius 5, probably
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -199,6 +226,23 @@ tree A:B ratio
 3
 1
 12
+
+
+SLIDER
+18
+288
+190
+321
+fire-probability
+fire-probability
+0
+1
+0.34
+0.01
+1
+NIL
+HORIZONTAL
+
 
 @#$#@#$#@
 ## WHAT IS IT?
