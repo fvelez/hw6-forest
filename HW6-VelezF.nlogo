@@ -92,6 +92,7 @@ to grow
    fire
   ]
 
+  burn ; calls function to decide whether a tree near a fire burns to ashes or not
 
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
@@ -237,7 +238,7 @@ fire-probability
 fire-probability
 0
 1
-0.34
+0.16
 0.01
 1
 NIL
