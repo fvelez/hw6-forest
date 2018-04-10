@@ -13,10 +13,13 @@ trees-own [
   life-expectancy
   max-tree-size
   max-diameter
+  diameter
   growth-rate
   is-harvested?
   fire-resistance
   age
+  mature-tree-mortality
+  immature-tree-mortality
 ]
 
 to setup
@@ -28,45 +31,120 @@ to setup
     set shape "tree"
     set species "A"
     setxy random-xcor random-ycor
-    set color green
-    set life-expectancy 300
-    set max-tree-size 6
+    set color green + (random-float 2)
+    set life-expectancy 150
+    set max-tree-size 1.2
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 300
+    set age random life-expectancy
+    set diameter growth-rate * life-expectancy
     set size growth-rate * age
-
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
   ; Create species B
   create-trees (n / 2) [
     set shape "tree"
     set species "B"
     setxy random-xcor random-ycor
-    set color red
-    set life-expectancy 200
-    set max-tree-size 4
+    set color red + (random-float 2)
+    set life-expectancy 100
+    set max-tree-size 1
     set growth-rate (max-tree-size / life-expectancy)
-    set age random 200
+    set age random life-expectancy
+    set diameter growth-rate * life-expectancy
     set size growth-rate * age
+    if size > max-tree-size [set size max-tree-size]
+    delta-mortality
   ]
 end
 
 
+; Is called every tick to update each tree's chances of dying as they age
+to delta-mortality
+  set mature-tree-mortality 0.6 ^ (life-expectancy - age)
+  set immature-tree-mortality 0.3 ^ age
+end
+
+
 to grow
-  tick
+  tick ;every time this function is run, 1 year has passed in this simulation
+
+  ; Any patches on fire slowly get darker as they burn out over 25 years.
+  ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2)]
+  ; When a patch has been on fire for 25 years, change back to green.
+  ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
+
+  ; Ask each tree to call a function to update itself.
   ask trees with [species = "A"][
-    set size growth-rate
+    update-trees
   ]
-  wait 0.01
+
+  ask trees with [species = "B"][
+    update-trees
+  ]
+
+  ; Randomly chooses a number to compare with the chances of a forest fire.
+  let fire-random random-float 1
+
+  ; Calls the 'fire' function if the random number by chance means there is a fire
+  if fire-random < fire-probability [
+   fire
+  ]
+
+
+  ; Forces program to wait each tick so that changes are easier to see
+  wait 0.1
+end
+
+
+; Updates a tree's diameter, size (if possible), mortality rate, and age
+to update-trees
+  set diameter diameter + growth-rate
+  if size < max-tree-size [
+    set size size + growth-rate
+  ]
+  set label age  ; remove later
+  set label-color white
+
+  ; Increase age by one year.
+  set age age + 1
+
+  ; If tree reaches its life-expectancy, it should die of old age
+  if age > life-expectancy[ set label "" die ]
+
+  ; Update mortality rate before comparison
+  delta-mortality
+
+  ; Randomly chooses a number to compare with mortality rates
+  let probability random-float 1 ;
+
+  ; Use the different mortality rates depending on if the tree has matured or not.
+  ifelse age > 25[
+    if probability < mature-tree-mortality [ die ]
+  ][
+    if probability < immature-tree-mortality [ die ]
+  ]
+
+end
+
+
+; Chooses a random patch to set on fire.
+; Will soon add code to affect trees within a radius. Or will that be in the 'grow' function
+to fire
+  ask one-of patches with [pcolor = green - 4] [
+    set pcolor red
+  ]
+  ; check trees w/in radius 5, probably
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+878
+679
 -1
 -1
-13.0
+20.0
 1
 10
 1
@@ -94,8 +172,8 @@ SLIDER
 n
 n
 0
-20
-20.0
+100
+100.0
 2
 1
 NIL
@@ -103,9 +181,9 @@ HORIZONTAL
 
 BUTTON
 15
-73
+74
 78
-106
+107
 NIL
 setup
 NIL
@@ -117,6 +195,49 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+19
+139
+83
+172
+run
+grow
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+16
+217
+130
+266
+tree A:B ratio
+(count trees with [species = \"A\"]) / (count trees with [species = \"B\"])
+3
+1
+12
+
+SLIDER
+18
+288
+190
+321
+fire-probability
+fire-probability
+0
+1
+0.34
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
