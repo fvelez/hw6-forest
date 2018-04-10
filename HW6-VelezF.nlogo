@@ -77,6 +77,7 @@ end
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
 
+
   ; Any patches on fire slowly get darker as they burn out over 25 years.
   ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2) ]
   ; When a patch has been on fire for 25 years, change back to green.
@@ -98,7 +99,6 @@ to grow
   if fire-random < fire-probability [
    fire
   ]
-
   burn ; calls function to decide whether a tree near a fire burns to ashes or not
 
   ; Forces program to wait each tick so that changes are easier to see
@@ -266,7 +266,6 @@ fire-probability
 fire-probability
 0
 1
-
 0.16
 0.01
 1
