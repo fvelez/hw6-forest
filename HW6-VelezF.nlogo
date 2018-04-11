@@ -41,7 +41,7 @@ to setup
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
     ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
-    set diameter growth-rate * life-expectancy
+    set diameter growth-rate * age
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
@@ -59,11 +59,18 @@ to setup
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
     ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
-    set diameter growth-rate * life-expectancy
+    set diameter growth-rate * age
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
     set fire-resistance fire-constant ^ age
+  ]
+
+  ;set immature tree colors to white for visualization regardless of species
+  ask trees[
+    if not is-mature?[
+      set color white
+    ]
   ]
 end
 
@@ -76,6 +83,7 @@ end
 
 
 to grow
+  crowded-patches
   tick ;every time this function is run, 1 year has passed in this simulation
 
   ; Any patches on fire slowly get darker as they burn out over 25 years.
@@ -115,7 +123,11 @@ end
 
 ; Updates a tree's diameter, size (if possible), mortality rate, and age
 to update-trees
-  if age > 25 [ set is-mature? true ]
+  if age > 25 [
+    set is-mature? true
+    if species = "A" [ set color green + (random-float 2) ]
+    if species = "B" [ set color red + (random-float 2) ]
+  ]
   ; updates the tree's fire resistance according to age
   set fire-resistance fire-constant ^ age
 
@@ -123,9 +135,6 @@ to update-trees
   if size < max-tree-size [
     set size size + growth-rate
   ]
-
-  set label age  ; remove later
-  set label-color white
 
   ; Increase age by one year.
   set age age + 1
@@ -158,7 +167,6 @@ to harvest
 
   ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
-  ;show harvest-percent
 
   ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
@@ -179,6 +187,10 @@ to reproduce
       setxy random-x random-y
       set age 1
       set is-mature? false
+      set color white
+      set diameter growth-rate * life-expectancy
+      set size growth-rate * age
+      if size > max-tree-size [set size max-tree-size]
     ]
 
   ]
@@ -213,12 +225,32 @@ to burn
   ]
 end
 
-
+ ; Ask patches if there is more than one tree on itself.
+ ; If so, ask mature trees to pick the one smallest diameter and tell it to die
+ ; we find that with overcrowding? on, the red trees (species B) die out very quickly
+ ; we presume this may be due to them having naturally smaller diameters than species A trees
 to crowded-patches
-  ; Ask patches if there is more than one tree on itself.
-  ; If so, keep asking the tree with the smallest diameter to die until there is only one tree on the patch.
-
+  if overcrowding?[
+    ask patches [
+      if count trees-here with [is-mature?] > 1[
+      ask trees-here with [is-mature? = true][
+        ask min-one-of trees [diameter] [die]
+      ]
+    ]
+  ]
+]
 end
+
+
+
+
+
+
+
+
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
@@ -255,8 +287,8 @@ SLIDER
 n
 n
 0
-300
-300.0
+1000
+472.0
 2
 1
 NIL
@@ -316,7 +348,7 @@ fire-probability
 fire-probability
 0
 1
-0.3
+0.13
 0.01
 1
 NIL
@@ -331,7 +363,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.3
+0.04
 0.01
 1
 NIL
@@ -344,7 +376,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-1
+0
 1
 -1000
 
@@ -357,7 +389,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.29
+0.06
 0.01
 1
 NIL
@@ -383,41 +415,9 @@ PENS
 "Species B" 1.0 0 -2139308 true "" "plot count trees with [species = \"B\"]"
 
 @#$#@#$#@
-## WHAT IS IT?
+## HW6 - Felix Velez and Kevin Hernandez
 
-(a general understanding of what the model is trying to show or explain)
-
-## HOW IT WORKS
-
-(what rules the agents use to create the overall behavior of the model)
-
-## HOW TO USE IT
-
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+We have neither given nor received any unauthorized aid on this assignment.
 @#$#@#$#@
 default
 true
@@ -724,7 +724,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
