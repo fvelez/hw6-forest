@@ -78,12 +78,14 @@ end
 to grow
   tick ;every time this function is run, 1 year has passed in this simulation
 
-
   ; Any patches on fire slowly get darker as they burn out over 25 years.
   ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2) ]
 
   ; When a patch has been on fire for 25 years, change back to green.
   ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
+
+  ; The color decreases after a year, so this changes their status to not on-fire
+  ; (you know, since fires don't burn for more than a year)
   ask patches with [ pcolor < 15 ] [ set on-fire? false ]
 
   ; Ask each tree to call a function to update itself.
@@ -104,9 +106,10 @@ to grow
   ]
   burn ; calls function to decide whether a tree near a fire burns to ashes or not
 
+  harvest ;  calls function to harvest hardwoods (species B).
+
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
-  harvest
 end
 
 
@@ -146,16 +149,27 @@ to update-trees
 end
 
 
+; Called by observer.
+; Counts mature hardwood trees and calculates how many of them
+;    will be asked to die based on the harvest-rate slider.
 to harvest
+  ; Total number of hardwood trees
   let hardwood-tree-count count trees with [species = "B" and is-mature? = true]
+
+  ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
-  show harvest-percent
+  ;show harvest-percent
+
+  ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
     ask one-of trees with [species = "B" and is-mature? = true] [ die ]
   ]
 end
 
 
+; Called by all trees and if a tree calling it is mature,
+;    generates a random value that determines if the tree
+;    produces a seed or not.
 to reproduce
   let probability random-float 1
   if (probability < reproduction-probability) and (is-mature? = true)[
@@ -172,7 +186,7 @@ end
 
 
 ; Chooses a random patch to set on fire.
-; Will soon add code to affect trees within a radius. Or will that be in the 'grow' function
+; Sets all patches within a radius of 5 to be on fire.
 to fire
   ask one-of patches with [pcolor = green - 4] [
     set pcolor red
@@ -188,6 +202,8 @@ to fire
 end
 
 
+; Asks trees that are on a burning patch to randomly generate a number that will
+;    determine whether it dies by fire or not.
 to burn
   ask trees[
     if [on-fire?] of patch-here = true [
@@ -198,9 +214,11 @@ to burn
 end
 
 
+to crowded-patches
+  ; Ask patches if there is more than one tree on itself.
+  ; If so, keep asking the tree with the smallest diameter to die until there is only one tree on the patch.
 
-
-
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
@@ -298,7 +316,7 @@ fire-probability
 fire-probability
 0
 1
-0.39
+0.3
 0.01
 1
 NIL
@@ -313,7 +331,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.13
+0.3
 0.01
 1
 NIL
@@ -339,7 +357,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.46
+0.29
 0.01
 1
 NIL
@@ -706,7 +724,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
