@@ -163,14 +163,14 @@ end
 ;    will be asked to die based on the harvest-rate slider.
 to harvest
   ; Total number of hardwood trees
-  let hardwood-tree-count count trees with [species = "B" and is-mature? = true]
+  let hardwood-tree-count count trees with [species = "A" and is-mature? = true]
 
   ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
 
   ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
-    ask one-of trees with [species = "B" and is-mature? = true] [ die ]
+    ask one-of trees with [species = "A" and is-mature? = true] [ die ]
   ]
 end
 
@@ -240,7 +240,6 @@ to crowded-patches
   ]
 ]
 end
-
 
 
 
@@ -348,7 +347,7 @@ fire-probability
 fire-probability
 0
 1
-0.13
+0.06
 0.01
 1
 NIL
@@ -376,7 +375,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-0
+1
 1
 -1000
 
@@ -389,7 +388,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.06
+0.07
 0.01
 1
 NIL
@@ -418,6 +417,22 @@ PENS
 ## HW6 - Felix Velez and Kevin Hernandez
 
 We have neither given nor received any unauthorized aid on this assignment.
+
+In this assignment, we simulate the growth of 2 species of trees. The details are as follows:
+
+Species A:
+• Has a longer life expectancy and larger maximum diameter, but a slower growth rate
+• Is more valuable than softwoods and may be harvested.
+• Is less resistant to fire
+• Is colored green
+
+Species B:
+• Has a shorter life expectancy and smaller maximum diameter but faster growth rate
+• Is not harvested.
+• Is more resistant to fire
+• Is colored red
+
+In 1 second, 10 years will have passed in this simulation. Immature trees (trees with age less than 25 years old) are colored white for visualization, regardless of species. Also, all trees will shift colors slightly throughout the passage of time for extra prettiness. Use the sliders to change the chance of fire, reproduction rate, and the percentage of harvesting species A (green) trees.
 @#$#@#$#@
 default
 true
