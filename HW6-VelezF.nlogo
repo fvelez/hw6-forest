@@ -2,10 +2,8 @@
 ; HW6
 
 globals [
-  life-ex-A
-  life-ex-B
-  max-size-A
-  max-size-B
+  impact-radius ;the radius in which seeds can grow from a mature, reproducing tree
+  max-density
 ]
 
 breed [ trees-A tree-A ]
@@ -46,6 +44,8 @@ patches-own [ on-fire? ]
 to setup
   ca
   reset-ticks
+  set max-density 2.5
+  set impact-radius 3
   ask patches [
     set pcolor green - 4
     set on-fire? false
@@ -202,8 +202,8 @@ to reproduce
   let probability random-float 1
   if (probability < reproduction-probability) and (is-mature?)[
     hatch 1[
-      let random-x (xcor + 3) - (random-float 6)
-      let random-y (ycor + 3) - (random-float 6)
+      let random-x (xcor + impact-radius) - (random-float 6)
+      let random-y (ycor + impact-radius) - (random-float 6)
       setxy random-x random-y
       set age 1
       set is-mature? false
