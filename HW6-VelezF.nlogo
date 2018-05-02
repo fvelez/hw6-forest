@@ -2,13 +2,29 @@
 ; HW6
 
 globals [
-
+  impact-radius ;the radius in which seeds can grow from a mature, reproducing tree
+  max-density
 ]
 
-breed [ trees tree ]
+breed [ trees-A tree-A ]
+breed [ trees-B tree-B ]
 
-trees-own [
-  species
+trees-A-own [
+  life-expectancy
+  max-tree-size
+  max-diameter
+  diameter
+  growth-rate
+  is-harvested?
+  age
+  mature-tree-mortality
+  immature-tree-mortality
+  fire-constant ; probability of a tree dying by fire, 0.6 for species A, 0.95 for species B (determined in setup)
+  fire-resistance
+  is-mature?
+]
+
+trees-B-own [
   life-expectancy
   max-tree-size
   max-diameter
@@ -28,11 +44,15 @@ patches-own [ on-fire? ]
 to setup
   ca
   reset-ticks
-  ask patches [set pcolor green - 4]
+  set max-density 2.5
+  set impact-radius 3
+  ask patches [
+    set pcolor green - 4
+    set on-fire? false
+  ]
   ; Create species A
-  create-trees (n / 2) [
+  create-trees-A (n / 2) [
     set shape "tree"
-    set species "A"
     set fire-constant 0.6
     setxy random-xcor random-ycor
     set color green + (random-float 2)
@@ -48,9 +68,8 @@ to setup
     set fire-resistance fire-constant ^ age
   ]
   ; Create species B
-  create-trees (n / 2) [
+  create-trees-B (n / 2) [
     set shape "tree"
-    set species "B"
     set fire-constant 0.95
     setxy random-xcor random-ycor
     set color red + (random-float 2)
@@ -67,12 +86,13 @@ to setup
   ]
 
   ;set immature tree colors to white for visualization regardless of species
-  ask trees[
+  ask turtles[
     if not is-mature?[
       set color white
     ]
   ]
 end
+
 
 
 ; Is called every tick to update each tree's chances of dying as they age
@@ -97,11 +117,11 @@ to grow
   ask patches with [ pcolor < 15 ] [ set on-fire? false ]
 
   ; Ask each tree to call a function to update itself.
-  ask trees with [species = "A"][
+  ask trees-A[
     update-trees
   ]
 
-  ask trees with [species = "B"][
+  ask trees-B[
     update-trees
   ]
 
@@ -125,8 +145,8 @@ end
 to update-trees
   if age > 25 [
     set is-mature? true
-    if species = "A" [ set color green + (random-float 2) ]
-    if species = "B" [ set color red + (random-float 2) ]
+    if [breed] of self = trees-A [ set color green + (random-float 2) ]
+    if [breed] of self = trees-B [ set color red + (random-float 2) ]
   ]
   ; updates the tree's fire resistance according to age
   set fire-resistance fire-constant ^ age
@@ -163,14 +183,14 @@ end
 ;    will be asked to die based on the harvest-rate slider.
 to harvest
   ; Total number of hardwood trees
-  let hardwood-tree-count count trees with [species = "A" and is-mature? = true]
+  let hardwood-tree-count count trees-A with [is-mature?]
 
   ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
 
   ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
-    ask one-of trees with [species = "A" and is-mature? = true] [ die ]
+    ask one-of trees-A with [is-mature?] [ die ]
   ]
 end
 
@@ -180,10 +200,10 @@ end
 ;    produces a seed or not.
 to reproduce
   let probability random-float 1
-  if (probability < reproduction-probability) and (is-mature? = true)[
+  if (probability < reproduction-probability) and (is-mature?)[
     hatch 1[
-      let random-x (xcor + 3) - (random-float 6)
-      let random-y (ycor + 3) - (random-float 6)
+      let random-x (xcor + impact-radius) - (random-float 6)
+      let random-y (ycor + impact-radius) - (random-float 6)
       setxy random-x random-y
       set age 1
       set is-mature? false
@@ -205,7 +225,7 @@ to fire
     set on-fire? true
   ]
   ;color all burning patches red for visualization
-  ask patches with [on-fire? = true] [
+  ask patches with [on-fire?] [
     ask patches in-radius 5 [
       set pcolor red
       set on-fire? true
@@ -217,8 +237,8 @@ end
 ; Asks trees that are on a burning patch to randomly generate a number that will
 ;    determine whether it dies by fire or not.
 to burn
-  ask trees[
-    if [on-fire?] of patch-here = true [
+  ask turtles[
+    if [on-fire?] of patch-here [
       let probability (random-float 1)
       if probability > fire-resistance [ die ]
     ]
@@ -232,14 +252,13 @@ end
 to crowded-patches
   if overcrowding?[
     ask patches [
-      if count trees-here with [is-mature?] > 1[
-      ask trees-here with [is-mature? = true][
-        ask min-one-of trees [diameter] [die]
+      if count turtles-here with [is-mature?] > 1[
+        ask min-one-of (turtles-here with [is-mature?]) [diameter] [die]
       ]
     ]
   ]
-]
 end
+
 
 
 
@@ -283,8 +302,8 @@ SLIDER
 n
 n
 0
-1000
-472.0
+500
+500.0
 2
 1
 NIL
@@ -330,7 +349,7 @@ MONITOR
 123
 193
 tree A:B ratio
-(count trees with [species = \"A\"]) / (count trees with [species = \"B\"])
+(count trees-A) / (count trees-B)
 3
 1
 12
@@ -344,7 +363,7 @@ fire-probability
 fire-probability
 0
 1
-0.06
+0.07
 0.01
 1
 NIL
@@ -359,7 +378,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.04
+0.01
 0.01
 1
 NIL
@@ -372,7 +391,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-1
+0
 1
 -1000
 
@@ -407,8 +426,8 @@ true
 false
 "" ""
 PENS
-"Species A" 1.0 0 -8330359 true "" "plot count trees with [species = \"A\"]"
-"Species B" 1.0 0 -2139308 true "" "plot count trees with [species = \"B\"]"
+"Species A" 1.0 0 -8330359 true "" "plot count trees-A"
+"Species B" 1.0 0 -2139308 true "" "plot count trees-B"
 
 @#$#@#$#@
 ## HW6 - Felix Velez and Kevin Hernandez
