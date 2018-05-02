@@ -9,6 +9,10 @@ globals [
 breed [ trees-A tree-A ]
 breed [ trees-B tree-B ]
 
+turtles-own[
+  density
+]
+
 trees-A-own [
   life-expectancy
   max-tree-size
@@ -156,6 +160,21 @@ to update-trees
     set size size + growth-rate
   ]
 
+  ;update the tree's density relative to itself in a radius of impact-radius
+  let temp 0
+  if is-mature? [
+    ask turtles in-radius 3 [set temp temp + diameter] ; get the diameters of all trees in radius of itself
+    let radius-count count turtles in-radius 3
+    set radius-count radius-count - 1 ; don't include the center tree
+    ifelse radius-count > 1 [
+      set density (temp / radius-count)
+    ][
+      set density diameter
+    ]
+    ;show density
+  ]
+
+
   ; Increase age by one year.
   set age age + 1
 
@@ -265,7 +284,6 @@ end
 
 
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
@@ -363,7 +381,7 @@ fire-probability
 fire-probability
 0
 1
-0.07
+0.0
 0.01
 1
 NIL
@@ -391,7 +409,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-0
+1
 1
 -1000
 
@@ -404,7 +422,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.07
+0.05
 0.01
 1
 NIL
