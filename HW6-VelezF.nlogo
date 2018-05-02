@@ -41,7 +41,7 @@ to setup
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
     ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
-    set diameter growth-rate * life-expectancy
+    set diameter growth-rate * age
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
@@ -59,11 +59,18 @@ to setup
     set growth-rate (max-tree-size / life-expectancy)
     set age random life-expectancy
     ifelse age > 25 [ set is-mature? true ] [ set is-mature? false ]
-    set diameter growth-rate * life-expectancy
+    set diameter growth-rate * age
     set size growth-rate * age
     if size > max-tree-size [set size max-tree-size]
     delta-mortality
     set fire-resistance fire-constant ^ age
+  ]
+
+  ;set immature tree colors to white for visualization regardless of species
+  ask trees[
+    if not is-mature?[
+      set color white
+    ]
   ]
 end
 
@@ -76,14 +83,17 @@ end
 
 
 to grow
+  crowded-patches
   tick ;every time this function is run, 1 year has passed in this simulation
-
 
   ; Any patches on fire slowly get darker as they burn out over 25 years.
   ask patches with [ pcolor != green - 4] [ set pcolor (pcolor - 0.2) ]
 
   ; When a patch has been on fire for 25 years, change back to green.
   ask patches with [ pcolor  <= 10.2 ] [ set pcolor green - 4]
+
+  ; The color decreases after a year, so this changes their status to not on-fire
+  ; (you know, since fires don't burn for more than a year)
   ask patches with [ pcolor < 15 ] [ set on-fire? false ]
 
   ; Ask each tree to call a function to update itself.
@@ -104,15 +114,20 @@ to grow
   ]
   burn ; calls function to decide whether a tree near a fire burns to ashes or not
 
+  harvest ;  calls function to harvest hardwoods (species B).
+
   ; Forces program to wait each tick so that changes are easier to see
   wait 0.1
-  harvest
 end
 
 
 ; Updates a tree's diameter, size (if possible), mortality rate, and age
 to update-trees
-  if age > 25 [ set is-mature? true ]
+  if age > 25 [
+    set is-mature? true
+    if species = "A" [ set color green + (random-float 2) ]
+    if species = "B" [ set color red + (random-float 2) ]
+  ]
   ; updates the tree's fire resistance according to age
   set fire-resistance fire-constant ^ age
 
@@ -120,9 +135,6 @@ to update-trees
   if size < max-tree-size [
     set size size + growth-rate
   ]
-
-  set label age  ; remove later
-  set label-color white
 
   ; Increase age by one year.
   set age age + 1
@@ -146,16 +158,26 @@ to update-trees
 end
 
 
+; Called by observer.
+; Counts mature hardwood trees and calculates how many of them
+;    will be asked to die based on the harvest-rate slider.
 to harvest
-  let hardwood-tree-count count trees with [species = "B" and is-mature? = true]
+  ; Total number of hardwood trees
+  let hardwood-tree-count count trees with [species = "A" and is-mature? = true]
+
+  ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
-  show harvest-percent
+
+  ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
-    ask one-of trees with [species = "B" and is-mature? = true] [ die ]
+    ask one-of trees with [species = "A" and is-mature? = true] [ die ]
   ]
 end
 
 
+; Called by all trees and if a tree calling it is mature,
+;    generates a random value that determines if the tree
+;    produces a seed or not.
 to reproduce
   let probability random-float 1
   if (probability < reproduction-probability) and (is-mature? = true)[
@@ -165,6 +187,10 @@ to reproduce
       setxy random-x random-y
       set age 1
       set is-mature? false
+      set color white
+      set diameter growth-rate * life-expectancy
+      set size growth-rate * age
+      if size > max-tree-size [set size max-tree-size]
     ]
 
   ]
@@ -172,7 +198,7 @@ end
 
 
 ; Chooses a random patch to set on fire.
-; Will soon add code to affect trees within a radius. Or will that be in the 'grow' function
+; Sets all patches within a radius of 5 to be on fire.
 to fire
   ask one-of patches with [pcolor = green - 4] [
     set pcolor red
@@ -188,6 +214,8 @@ to fire
 end
 
 
+; Asks trees that are on a burning patch to randomly generate a number that will
+;    determine whether it dies by fire or not.
 to burn
   ask trees[
     if [on-fire?] of patch-here = true [
@@ -196,6 +224,25 @@ to burn
     ]
   ]
 end
+
+ ; Ask patches if there is more than one tree on itself.
+ ; If so, ask mature trees to pick the one smallest diameter and tell it to die
+ ; we find that with overcrowding? on, the red trees (species B) die out very quickly
+ ; we presume this may be due to them having naturally smaller diameters than species A trees
+to crowded-patches
+  if overcrowding?[
+    ask patches [
+      if count trees-here with [is-mature?] > 1[
+      ask trees-here with [is-mature? = true][
+        ask min-one-of trees [diameter] [die]
+      ]
+    ]
+  ]
+]
+end
+
+
+
 
 
 
@@ -365,41 +412,25 @@ PENS
 "Species B" 1.0 0 -2139308 true "" "plot count trees with [species = \"B\"]"
 
 @#$#@#$#@
-## WHAT IS IT?
+## HW6 - Felix Velez and Kevin Hernandez
 
-(a general understanding of what the model is trying to show or explain)
+We have neither given nor received any unauthorized aid on this assignment.
 
-## HOW IT WORKS
+In this assignment, we simulate the growth of 2 species of trees. The details are as follows:
 
-(what rules the agents use to create the overall behavior of the model)
+Species A:
+• Has a longer life expectancy and larger maximum diameter, but a slower growth rate
+• Is more valuable than softwoods and may be harvested.
+• Is less resistant to fire
+• Is colored green
 
-## HOW TO USE IT
+Species B:
+• Has a shorter life expectancy and smaller maximum diameter but faster growth rate
+• Is not harvested.
+• Is more resistant to fire
+• Is colored red
 
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+In 1 second, 10 years will have passed in this simulation. Immature trees (trees with age less than 25 years old) are colored white for visualization, regardless of species. Also, all trees will shift colors slightly throughout the passage of time for extra prettiness. Use the sliders to change the chance of fire, reproduction rate, and the percentage of harvesting species A (green) trees.
 @#$#@#$#@
 default
 true
