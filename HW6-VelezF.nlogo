@@ -6,6 +6,8 @@ globals [
 ]
 
 breed [ trees tree ]
+breed [ trees-A tree-A ]
+breed [ trees-B tree-B ]
 
 trees-own [
   species
@@ -163,14 +165,14 @@ end
 ;    will be asked to die based on the harvest-rate slider.
 to harvest
   ; Total number of hardwood trees
-  let hardwood-tree-count count trees with [species = "A" and is-mature? = true]
+  let hardwood-tree-count count trees with [species = "A" and is-mature?]
 
   ; Number of trees to be harvested based on harvest-rate.
   let harvest-percent round (hardwood-tree-count * harvest-rate)
 
   ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
-    ask one-of trees with [species = "A" and is-mature? = true] [ die ]
+    ask one-of trees with [species = "A" and is-mature?] [ die ]
   ]
 end
 
@@ -180,7 +182,7 @@ end
 ;    produces a seed or not.
 to reproduce
   let probability random-float 1
-  if (probability < reproduction-probability) and (is-mature? = true)[
+  if (probability < reproduction-probability) and (is-mature?)[
     hatch 1[
       let random-x (xcor + 3) - (random-float 6)
       let random-y (ycor + 3) - (random-float 6)
@@ -205,7 +207,7 @@ to fire
     set on-fire? true
   ]
   ;color all burning patches red for visualization
-  ask patches with [on-fire? = true] [
+  ask patches with [on-fire?] [
     ask patches in-radius 5 [
       set pcolor red
       set on-fire? true
@@ -218,7 +220,7 @@ end
 ;    determine whether it dies by fire or not.
 to burn
   ask trees[
-    if [on-fire?] of patch-here = true [
+    if [on-fire?] of patch-here  [
       let probability (random-float 1)
       if probability > fire-resistance [ die ]
     ]
@@ -233,13 +235,12 @@ to crowded-patches
   if overcrowding?[
     ask patches [
       if count trees-here with [is-mature?] > 1[
-      ask trees-here with [is-mature? = true][
-        ask min-one-of trees [diameter] [die]
+        ask min-one-of (trees-here with [is-mature?]) [diameter] [die]
       ]
     ]
   ]
-]
 end
+
 
 
 
@@ -283,8 +284,8 @@ SLIDER
 n
 n
 0
-1000
-472.0
+500
+500.0
 2
 1
 NIL
@@ -344,7 +345,7 @@ fire-probability
 fire-probability
 0
 1
-0.06
+0.0
 0.01
 1
 NIL
@@ -359,7 +360,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.04
+0.0
 0.01
 1
 NIL
@@ -372,7 +373,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-1
+0
 1
 -1000
 
@@ -385,7 +386,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.07
+0.03
 0.01
 1
 NIL
