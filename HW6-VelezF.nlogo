@@ -247,9 +247,6 @@ end
 
 
 
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
