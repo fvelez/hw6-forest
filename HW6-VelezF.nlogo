@@ -247,7 +247,6 @@ end
 
 
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
@@ -284,8 +283,8 @@ SLIDER
 n
 n
 0
-300
-300.0
+1000
+472.0
 2
 1
 NIL
@@ -345,7 +344,7 @@ fire-probability
 fire-probability
 0
 1
-0.39
+0.06
 0.01
 1
 NIL
@@ -360,7 +359,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.13
+0.04
 0.01
 1
 NIL
@@ -386,7 +385,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.46
+0.07
 0.01
 1
 NIL
