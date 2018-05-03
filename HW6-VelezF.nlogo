@@ -11,7 +11,7 @@ breed [ trees-B tree-B ] ; refer to species B trees as trees-B
 
 ; traits shared across all trees
 turtles-own[
-  density
+  density   ; value showing competition within certain area of a tree
   mature-tree-mortality ; mortality rate as an immature tree
   immature-tree-mortality ; mortality rate as a mature tree
   is-harvested? ; if true, harvest this tree given the details within harvest procedure
@@ -38,19 +38,21 @@ trees-B-own [
   growth-rate ; the growth rate of a tree (0.01)
 ]
 
-patches-own [ on-fire? ]
+patches-own [ on-fire? ]  ; true when a patch should singify it being part of a forest fire
 
+; Initialize all variables and create trees randomly
 to setup
   ca
   reset-ticks
   set max-density 2.5 ; global, true for all trees
-  set impact-radius 3
+  set impact-radius 3 ; used to calculate density
   ask patches [
-    set pcolor green - 4
-    set on-fire? false
+    set pcolor green - 4  ; 'foresty' ground
+    set on-fire? false    ; no fires initially
   ]
+
   ; Create species A
-  create-trees-A (n / 2) [
+  create-trees-A (n / 2) [  ; half of n is species A
     set shape "tree"
     set fire-constant 0.6
     setxy random-xcor random-ycor
@@ -67,7 +69,7 @@ to setup
     set fire-resistance fire-constant ^ age
   ]
   ; Create species B
-  create-trees-B (n / 2) [
+  create-trees-B (n / 2) [  ; half of n is species B
     set shape "tree"
     set fire-constant 0.95
     setxy random-xcor random-ycor
@@ -101,6 +103,7 @@ to delta-mortality
 end
 
 
+; Called by run, core function
 to grow
   crowded-patches
   tick ;every time this function is run, 1 year has passed in this simulation
@@ -125,8 +128,6 @@ to grow
 
   harvest ;  calls function to harvest hardwoods (species B).
 
-  ; Forces program to wait each tick so that changes are easier to see
-  ;wait 0.1
 end
 
 
@@ -147,6 +148,7 @@ to update-trees
   ; Increase age by one year.
   set age age + 1
 
+  ; Call function to calculate density
   delta-density
 
   ; If tree reaches its life-expectancy, it should die of old age
@@ -172,6 +174,7 @@ to update-color
 end
 
 
+; Kills trees based on their individual mortality rates
 to kill-trees
   ; Randomly chooses a number to compare with mortality rates
   let probability random-float 1 ;
@@ -205,12 +208,12 @@ end
 ;update the tree's density relative to itself in a radius of impact-radius
 to delta-density
   let temp 0
-  ;if is-mature? [
-    ask turtles in-radius 3 [set temp temp + diameter] ; get the diameters of all trees in radius of itself
-    set density (temp / (pi * (impact-radius ^ 2)))
-    set density diameter
-    density-death
-  ;]
+  ask turtles in-radius 3 [set temp temp + diameter] ; get the diameters of all trees in radius of itself
+  set density (temp / (pi * (impact-radius ^ 2)))
+  set density diameter
+
+  ; Called to check if the density is higher than max-density
+  density-death
 end
 
 
@@ -303,10 +306,6 @@ to density-death
     ask min-one-of (turtles-here in-radius impact-radius) [diameter] [die]
   ]
 end
-
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 292
@@ -831,7 +830,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
