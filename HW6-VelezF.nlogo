@@ -3,44 +3,44 @@
 
 globals [
   impact-radius ;the radius in which seeds can grow from a mature, reproducing tree
-  max-density
+  max-density ;the maximum density of trees within its impact radius
 ]
 
-breed [ trees-A tree-A ]
-breed [ trees-B tree-B ]
+breed [ trees-A tree-A ] ; refer to species A trees as trees-A
+breed [ trees-B tree-B ] ; refer to species B trees as trees-B
 
 turtles-own[
   density
 ]
 
 trees-A-own [
-  life-expectancy
-  max-tree-size
-  max-diameter
-  diameter
-  growth-rate
-  is-harvested?
-  age
-  mature-tree-mortality
-  immature-tree-mortality
-  fire-constant ; probability of a tree dying by fire, 0.6 for species A, 0.95 for species B (determined in setup)
-  fire-resistance
-  is-mature?
+  life-expectancy ; life expectancy of a tree (150)
+  max-tree-size ; maximum size of a tree (1.2)
+  max-diameter ; maximum diameter of a tree (1.2)
+  diameter ; tree's current diameter
+  growth-rate ; the growth rate of a tree (0.008)
+  is-harvested? ; if true, harvest this tree given the details within harvest procedure
+  age ; tree's current age
+  mature-tree-mortality ; mortality rate as an immature tree
+  immature-tree-mortality ; mortality rate as a mature tree
+  fire-constant ; probability of a tree dying by fire, 0.6 for species A (determined in setup)
+  fire-resistance ; fire resistance of a tree
+  is-mature? ;true if age > 25, false otherwise
 ]
 
 trees-B-own [
-  life-expectancy
-  max-tree-size
-  max-diameter
-  diameter
-  growth-rate
-  is-harvested?
-  age
-  mature-tree-mortality
-  immature-tree-mortality
-  fire-constant ; probability of a tree dying by fire, 0.6 for species A, 0.95 for species B (determined in setup)
-  fire-resistance
-  is-mature?
+  life-expectancy ; life expectancy of a tree (100)
+  max-tree-size ; maximum size of a tree (1.0)
+  max-diameter ; maximum diameter of a tree (1.0)
+  diameter ; tree's current diameter
+  growth-rate ; the growth rate of a tree (0.01)
+  is-harvested? ; if true, harvest this tree given the details within harvest procedure
+  age ; tree's current age
+  mature-tree-mortality ; mortality rate as an immature tree
+  immature-tree-mortality ; mortality rate as a mature tree
+  fire-constant ; probability of a tree dying by fire,  0.95 for species B (determined in setup)
+  fire-resistance ; fire resistance of a tree
+  is-mature? ;true if age > 25, false otherwise
 ]
 
 patches-own [ on-fire? ]
@@ -48,7 +48,7 @@ patches-own [ on-fire? ]
 to setup
   ca
   reset-ticks
-  set max-density 2.5
+  set max-density 2.5 ; global, true for all trees
   set impact-radius 3
   ask patches [
     set pcolor green - 4
@@ -121,11 +121,7 @@ to grow
   ask patches with [ pcolor < 15 ] [ set on-fire? false ]
 
   ; Ask each tree to call a function to update itself.
-  ask trees-A[
-    update-trees
-  ]
-
-  ask trees-B[
+  ask turtles[
     update-trees
   ]
 
@@ -143,7 +139,7 @@ to grow
   harvest ;  calls function to harvest hardwoods (species B).
 
   ; Forces program to wait each tick so that changes are easier to see
-  wait 0.1
+  ;wait 0.1
 end
 
 
@@ -328,7 +324,7 @@ n
 n
 0
 500
-500.0
+100.0
 2
 1
 NIL
@@ -388,7 +384,7 @@ fire-probability
 fire-probability
 0
 1
-0.0
+0.11
 0.01
 1
 NIL
@@ -403,7 +399,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.34
+0.1
 0.01
 1
 NIL
@@ -416,7 +412,7 @@ SWITCH
 356
 overcrowding?
 overcrowding?
-1
+0
 1
 -1000
 
@@ -429,7 +425,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.06
+0.11
 0.01
 1
 NIL
@@ -463,7 +459,7 @@ min-harvest-diam
 min-harvest-diam
 0.2
 1.2
-0.56
+1.08
 0.008
 1
 NIL
@@ -478,14 +474,14 @@ p
 p
 0
 1
-1.0
+0.08
 0.01
 1
 NIL
 HORIZONTAL
 
 @#$#@#$#@
-## HW6 - Felix Velez and Kevin Hernandez
+## HW7 - Felix Velez and Kevin Hernandez
 
 We have neither given nor received any unauthorized aid on this assignment.
 
@@ -503,7 +499,9 @@ Species B:
 • Is more resistant to fire
 • Is colored red
 
-In 1 second, 10 years will have passed in this simulation. Immature trees (trees with age less than 25 years old) are colored white for visualization, regardless of species. Also, all trees will shift colors slightly throughout the passage of time for extra prettiness. Use the sliders to change the chance of fire, reproduction rate, and the percentage of harvesting species A (green) trees.
+Immature trees (trees with age less than 25 years old) are colored white for visualization, regardless of species. Also, all trees will shift colors slightly throughout the passage of time for extra prettiness. Use the sliders to change the chance of fire, reproduction rate, and the percentage of harvesting species A (green) trees.
+
+In our updated version for this HW7, there are now global variables impact-radius and max-density, which is the radius in which mature trees can drop saplings and the maximum density within a given area, respectively. Also, tree harvesting for species A is more complex, in which trees greater than min-diam-harvest are harvested by p proportion.
 @#$#@#$#@
 default
 true
