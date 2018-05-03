@@ -129,6 +129,8 @@ to grow
     update-trees
   ]
 
+  if any? turtles[ask max-one-of turtles [density] [show density]]
+
   ; Randomly chooses a number to compare with the chances of a forest fire.
   let fire-random random-float 1
 
@@ -160,23 +162,10 @@ to update-trees
     set size size + growth-rate
   ]
 
-  ;update the tree's density relative to itself in a radius of impact-radius
-  let temp 0
-  if is-mature? [
-    ask turtles in-radius 3 [set temp temp + diameter] ; get the diameters of all trees in radius of itself
-    let radius-count count turtles in-radius 3
-    set radius-count radius-count - 1 ; don't include the center tree
-    ifelse radius-count > 1 [
-      set density (temp / radius-count)
-    ][
-      set density diameter
-    ]
-    ;show density
-  ]
-
-
   ; Increase age by one year.
   set age age + 1
+
+  delta-density
 
   ; If tree reaches its life-expectancy, it should die of old age
   if age > life-expectancy[ set label "" die ]
@@ -197,19 +186,31 @@ to update-trees
 end
 
 
+;update the tree's density relative to itself in a radius of impact-radius
+to delta-density
+  let temp 0
+  ;if is-mature? [
+    ask turtles in-radius 3 [set temp temp + diameter] ; get the diameters of all trees in radius of itself
+    set density (temp / (pi * (impact-radius ^ 2)))
+    set density diameter
+    density-death
+  ;]
+end
+
+
 ; Called by observer.
 ; Counts mature hardwood trees and calculates how many of them
 ;    will be asked to die based on the harvest-rate slider.
 to harvest
   ; Total number of hardwood trees
-  let hardwood-tree-count count trees-A with [is-mature?]
+  let hardwood-tree-count count trees-A with [is-mature? and diameter > min-harvest-diam]
 
   ; Number of trees to be harvested based on harvest-rate.
-  let harvest-percent round (hardwood-tree-count * harvest-rate)
+  let harvest-percent floor (hardwood-tree-count * p)
 
   ; EX: If 5 trees are to be harvested, use repeat to ask 5 hardwood trees to die.
   repeat harvest-percent[
-    ask one-of trees-A with [is-mature?] [ die ]
+    ask one-of trees-A with [is-mature? and diameter > min-harvest-diam] [ die ]
   ]
 end
 
@@ -264,6 +265,7 @@ to burn
   ]
 end
 
+
  ; Ask patches if there is more than one tree on itself.
  ; If so, ask mature trees to pick the one smallest diameter and tell it to die
  ; we find that with overcrowding? on, the red trees (species B) die out very quickly
@@ -279,7 +281,12 @@ to crowded-patches
 end
 
 
-
+; asks trees with smallest diameter to die if the tree density is too high
+to density-death
+  if density > max-density[
+    ask min-one-of (turtles-here in-radius impact-radius) [diameter] [die]
+  ]
+end
 
 
 
@@ -309,7 +316,7 @@ GRAPHICS-WINDOW
 0
 0
 1
-ticks
+years
 30.0
 
 SLIDER
@@ -396,7 +403,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.01
+0.34
 0.01
 1
 NIL
@@ -422,17 +429,17 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.05
+0.06
 0.01
 1
 NIL
 HORIZONTAL
 
 PLOT
-9
-364
-274
-581
+10
+460
+275
+677
 Tree population of Species A/ B per year
 years
 tree count
@@ -447,6 +454,36 @@ PENS
 "Species A" 1.0 0 -8330359 true "" "plot count trees-A"
 "Species B" 1.0 0 -2139308 true "" "plot count trees-B"
 
+SLIDER
+9
+364
+263
+397
+min-harvest-diam
+min-harvest-diam
+0.2
+1.2
+0.56
+0.008
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+406
+182
+439
+p
+p
+0
+1
+1.0
+0.01
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## HW6 - Felix Velez and Kevin Hernandez
 
@@ -455,13 +492,13 @@ We have neither given nor received any unauthorized aid on this assignment.
 In this assignment, we simulate the growth of 2 species of trees. The details are as follows:
 
 Species A:
-• Has a longer life expectancy and larger maximum diameter, but a slower growth rate
+• Has a longer life expectancy and larger maximum diameter (1.2), but a slower growth rate
 • Is more valuable than softwoods and may be harvested.
 • Is less resistant to fire
 • Is colored green
 
 Species B:
-• Has a shorter life expectancy and smaller maximum diameter but faster growth rate
+• Has a shorter life expectancy and smaller maximum diameter (1) but faster growth rate
 • Is not harvested.
 • Is more resistant to fire
 • Is colored red
