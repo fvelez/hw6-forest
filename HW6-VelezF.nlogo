@@ -115,8 +115,6 @@ to grow
     update-trees
   ]
 
-  if any? turtles[ask max-one-of turtles [density] [show density]]
-
   ; Randomly chooses a number to compare with the chances of a forest fire.
   let fire-random random-float 1
 
@@ -403,7 +401,7 @@ fire-probability
 fire-probability
 0
 1
-0.03
+0.15
 0.01
 1
 NIL
@@ -418,7 +416,7 @@ harvest-rate
 harvest-rate
 0
 1
-0.02
+0.2
 0.01
 1
 NIL
@@ -444,7 +442,7 @@ reproduction-probability
 reproduction-probability
 0
 1
-0.12
+0.25
 0.01
 1
 NIL
@@ -478,7 +476,7 @@ min-harvest-diam
 min-harvest-diam
 0.2
 1.2
-1.08
+1.0
 0.008
 1
 NIL
@@ -524,6 +522,8 @@ In our updated version for this HW7, there are now global variables impact-radiu
 
 
 ### Experiments summary:
+
+In our experiments, we ran simulations for up to 300 ticks (years). We know that fires are extremely deadly for Species A trees, so we played with that slider under many different conditions. We have found that if fire probabilities are higher, then to keep a sustainable harvest of Species A trees they would need a higher reproduction rate and a lower harvest rate. If the fire probabilities were lower, then harvest rates could only be slightly higher, as well as proportions. Ideally, the minimum diameter of trees to harvest should be > 1.0 to help keep a sustainable population of Species A trees in the form of allowing many years for them to drop saplings before they could be cut down.
 @#$#@#$#@
 default
 true
@@ -835,30 +835,60 @@ NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="low fire, harvest, and high min-harvest-diam" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
-    <go>go</go>
-    <metric>count turtles</metric>
+    <go>grow</go>
+    <exitCondition>ticks &gt; 300</exitCondition>
+    <metric>count trees-A</metric>
+    <metric>count trees-B</metric>
     <enumeratedValueSet variable="harvest-rate">
       <value value="0.03"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fire-probability">
-      <value value="0.07"/>
+      <value value="0.03"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="reproduction-probability">
       <value value="0.12"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="p">
-      <value value="0.08"/>
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="overcrowding?">
       <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="min-harvest-diam">
-      <value value="1.008"/>
+      <value value="1.08"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n">
-      <value value="88"/>
+      <value value="100"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="medium fire, high harvest, min-harvest-diam and reproduction" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>grow</go>
+    <exitCondition>ticks &gt; 300</exitCondition>
+    <metric>count trees-A</metric>
+    <metric>count trees-B</metric>
+    <enumeratedValueSet variable="harvest-rate">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fire-probability">
+      <value value="0.15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="reproduction-probability">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="overcrowding?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="min-harvest-diam">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n">
+      <value value="100"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
